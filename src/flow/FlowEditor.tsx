@@ -48,7 +48,7 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
           if (nodeData.kind === 'start') return // start 노드는 이미 있음
           
           const id = `${nodeData.kind}-${Date.now()}-${index}`
-          const position = { x: 100 + index * 200, y: 200 }
+          const position = { x: 100, y: 200 + index * 120 }
           const node: Node<PipelineNodeData> = { 
             id, 
             position, 
@@ -104,11 +104,11 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
     }
   }
 
-  // 노드 추가(클릭/드롭 공용). 위치 미지정 시 간단한 가로 오프셋 배치
+  // 노드 추가(클릭/드롭 공용). 위치 미지정 시 간단한 세로 오프셋 배치
   const addNode = useCallback((data: Partial<PipelineNodeData>, position?: { x: number, y: number }) => {
     setNodes(ns => {
       const id = `${data.kind}-${Date.now()}-${Math.round(Math.random()*1e4)}`
-      const pos = position ?? { x: 100 + ns.length * 40, y: 200 }
+      const pos = position ?? { x: 100, y: 200 + ns.length * 120 }
       const node: Node<PipelineNodeData> = { id, position: pos, data: { label: labelFor(data), ...(data as PipelineNodeData) } }
       return [...ns, node]
     })

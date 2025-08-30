@@ -75,8 +75,13 @@ echo "✅ Pipeline completed successfully"`
     setIsEditing(false)
   }
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing)
+  const handleBoxClick = () => {
+    setIsEditing(true)
+  }
+
+  const handleBlur = () => {
+    // 포커스를 잃었을 때 자동으로 편집 모드 해제
+    setTimeout(() => setIsEditing(false), 100)
   }
 
   return (
@@ -94,10 +99,12 @@ echo "✅ Pipeline completed successfully"`
             onClick={() => setActiveTab('yaml')} 
             style={{ 
               padding: '4px 12px',
-              backgroundColor: activeTab === 'yaml' ? '#007acc' : 'transparent',
-              border: '1px solid rgba(255,255,255,.15)',
+              backgroundColor: activeTab === 'yaml' ? '#007acc' : 'rgba(255,255,255,.1)',
+              border: '1px solid rgba(255,255,255,.2)',
               borderRadius: '4px',
-              color: activeTab === 'yaml' ? 'white' : 'inherit'
+              color: activeTab === 'yaml' ? 'white' : '#e0e0e0',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
             YAML
@@ -106,43 +113,33 @@ echo "✅ Pipeline completed successfully"`
             onClick={() => setActiveTab('shell')} 
             style={{ 
               padding: '4px 12px',
-              backgroundColor: activeTab === 'shell' ? '#007acc' : 'transparent',
-              border: '1px solid rgba(255,255,255,.15)',
+              backgroundColor: activeTab === 'shell' ? '#007acc' : 'rgba(255,255,255,.1)',
+              border: '1px solid rgba(255,255,255,.2)',
               borderRadius: '4px',
-              color: activeTab === 'shell' ? 'white' : 'inherit'
+              color: activeTab === 'shell' ? 'white' : '#e0e0e0',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
             Shell
           </button>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        {isEditing && (
           <button 
-            onClick={handleEditToggle}
+            onClick={handleGenerateNodes}
             style={{ 
               padding: '4px 12px',
-              backgroundColor: isEditing ? '#28a745' : '#6c757d',
-              border: '1px solid rgba(255,255,255,.15)',
+              backgroundColor: '#007acc',
+              border: '1px solid rgba(255,255,255,.2)',
               borderRadius: '4px',
-              color: 'white'
+              color: 'white',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
-            {isEditing ? '편집 중' : '편집'}
+            노드 생성
           </button>
-          {isEditing && (
-            <button 
-              onClick={handleGenerateNodes}
-              style={{ 
-                padding: '4px 12px',
-                backgroundColor: '#007acc',
-                border: '1px solid rgba(255,255,255,.15)',
-                borderRadius: '4px',
-                color: 'white'
-              }}
-            >
-              노드 생성
-            </button>
-          )}
-        </div>
+        )}
       </div>
       
       <div style={{ flex: 1, overflow: 'auto' }}>
@@ -150,12 +147,14 @@ echo "✅ Pipeline completed successfully"`
           <textarea
             value={activeTab === 'yaml' ? yamlScript : shellScript}
             onChange={(e) => handleScriptChange(e.target.value, activeTab)}
+            onBlur={handleBlur}
+            autoFocus
             style={{
               width: '100%',
               height: '100%',
-              backgroundColor: '#1e1e1e',
-              color: '#d4d4d4',
-              border: '1px solid rgba(255,255,255,.15)',
+              backgroundColor: '#2d2d2d',
+              color: '#f0f0f0',
+              border: '1px solid rgba(255,255,255,.2)',
               borderRadius: '4px',
               padding: '8px',
               fontFamily: 'monospace',
@@ -165,14 +164,29 @@ echo "✅ Pipeline completed successfully"`
             placeholder={activeTab === 'yaml' ? 'YAML 스크립트를 입력하세요...' : 'Shell 스크립트를 입력하세요...'}
           />
         ) : (
-          <pre style={{ 
-            whiteSpace: 'pre-wrap', 
-            margin: 0,
-            padding: '8px',
-            backgroundColor: '#1e1e1e',
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}>
+          <pre 
+            onClick={handleBoxClick}
+            style={{ 
+              whiteSpace: 'pre-wrap', 
+              margin: 0,
+              padding: '8px',
+              backgroundColor: '#2d2d2d',
+              borderRadius: '4px',
+              fontSize: '12px',
+              cursor: 'pointer',
+              border: '1px solid transparent',
+              transition: 'all 0.2s ease',
+              color: '#f0f0f0'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,.4)'
+              e.currentTarget.style.backgroundColor = '#3a3a3a'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'transparent'
+              e.currentTarget.style.backgroundColor = '#2d2d2d'
+            }}
+          >
             {activeTab === 'yaml' ? yamlScript : shellScript}
           </pre>
         )}
