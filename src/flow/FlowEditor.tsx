@@ -178,10 +178,32 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes, edges])
 
+  const resetFlow = useCallback(() => {
+    setNodes(initialNodes)
+    setEdges([])
+  }, [setNodes, setEdges, initialNodes])
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 12, height: '100%' }}>
       <div style={{ borderRight: '1px solid rgba(255,255,255,.15)', paddingRight: 12 }}>
         <div style={{ fontWeight: 700, marginBottom: 8 }}>Palette</div>
+        <button
+          onClick={resetFlow}
+          style={{ 
+            width: '100%', 
+            marginBottom: 16, 
+            padding: '8px 12px',
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+          title="모든 노드와 엣지를 지우고 초기 상태로 되돌립니다"
+        >
+          🔄 초기화
+        </button>
         {palette.map((p, idx) => (
           <button
             key={idx}
