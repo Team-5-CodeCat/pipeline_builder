@@ -15,10 +15,11 @@ const initialNodes: Node<PipelineNodeData>[] = [
 
 export interface FlowEditorProps {
   onGraphChange?: (nodes: Node<PipelineNodeData>[], edges: Edge[]) => void
+  onGenerateFromScript?: (nodes: PipelineNodeData[]) => void
 }
 
 // 실제 에디터 캔버스 컴포넌트 (Provider 내부에서만 동작)
-function EditorCanvas({ onGraphChange }: FlowEditorProps) {
+function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) {
   // React Flow 상태 훅: 노드/엣지 배열과 변경 핸들러를 반환
   const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNodeData>(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
@@ -33,6 +34,49 @@ function EditorCanvas({ onGraphChange }: FlowEditorProps) {
       onGraphChange(nodes, edges)
     }
   }, [nodes, edges, onGraphChange])
+
+  // 스크립트에서 생성된 노드들을 처리
+  useEffect(() => {
+    if (onGenerateFromScript) {
+      const handleScriptNodes = (scriptNodes: PipelineNodeData[]) => {
+        // 기존 노드들 제거 (start 노드 제외)
+        const startNode = nodes.find(n => n.data.kind === 'start')
+        const newNodes: Node<PipelineNodeData>[] = startNode ? [startNode] : []
+        
+        // 스크립트에서 생성된 노드들을 순차적으로 추가
+        scriptNodes.forEach((nodeData, index) => {
+          if (nodeData.kind === 'start') return // start 노드는 이미 있음
+          
+          const id = `${nodeData.kind}-${Date.now()}-${index}`
+          const position = { x: 100 + index * 200, y: 200 }
+          const node: Node<PipelineNodeData> = { 
+            id, 
+            position, 
+            data: { ...nodeData, label: nodeData.label || nodeData.kind } 
+          }
+          newNodes.push(node)
+        })
+        
+        setNodes(newNodes)
+        
+        // 노드들을 순차적으로 연결하는 엣지 생성
+        const newEdges: Edge[] = []
+        for (let i = 0; i < newNodes.length - 1; i++) {
+          newEdges.push({
+            id: `edge-${newNodes[i].id}-${newNodes[i + 1].id}`,
+            source: newNodes[i].id,
+            target: newNodes[i + 1].id,
+            animated: true,
+            markerEnd: { type: MarkerType.ArrowClosed }
+          })
+        }
+        setEdges(newEdges)
+      }
+      
+      // 전역 함수로 등록하여 외부에서 호출 가능하게 함
+      ;(window as { generateNodesFromScript?: (nodes: PipelineNodeData[]) => void }).generateNodesFromScript = handleScriptNodes
+    }
+  }, [nodes, setNodes, setEdges, onGenerateFromScript])
 
   // 엣지 연결 시: 화살표와 애니메이션 추가
   const onConnect = useCallback((params: Edge | Connection) => {
@@ -189,10 +233,10 @@ function EditorCanvas({ onGraphChange }: FlowEditorProps) {
 }
 
 // Provider로 감싼 래퍼. useReactFlow 훅 사용을 가능하게 함
-export default function FlowEditor({ onGraphChange }: FlowEditorProps) {
+export default function FlowEditor({ onGraphChange, onGenerateFromScript }: FlowEditorProps) {
   return (
     <ReactFlowProvider>
-      <EditorCanvas onGraphChange={onGraphChange} />
+      <EditorCanvas onGraphChange={onGraphChange} onGenerateFromScript={onGenerateFromScript} />
     </ReactFlowProvider>
   )
 }
