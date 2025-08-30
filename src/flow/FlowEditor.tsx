@@ -114,6 +114,31 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
     })
   }, [setNodes])
 
+  // 노드가 추가될 때마다 자동으로 엣지 생성
+  useEffect(() => {
+    if (nodes.length > 1) {
+      const lastNode = nodes[nodes.length - 1]
+      const secondLastNode = nodes[nodes.length - 2]
+      
+      // start 노드가 아닌 경우에만 이전 노드와 연결
+      if (lastNode.data.kind !== 'start' && secondLastNode) {
+        // 이미 연결된 엣지가 있는지 확인
+        const edgeExists = edges.some(e => e.source === secondLastNode.id && e.target === lastNode.id)
+        
+        if (!edgeExists) {
+          const newEdge: Edge = {
+            id: `edge-${secondLastNode.id}-${lastNode.id}`,
+            source: secondLastNode.id,
+            target: lastNode.id,
+            animated: true,
+            markerEnd: { type: MarkerType.ArrowClosed }
+          }
+          setEdges(es => [...es, newEdge])
+        }
+      }
+    }
+  }, [nodes, edges, setEdges])
+
   // 좌측 팔레트 정의 (드래그&클릭으로 추가)
   const palette = useMemo(() => [
     { label: 'Git Clone', data: { kind: 'git_clone' as const, repoUrl: 'https://github.com/user/repo.git', branch: 'main' } },
@@ -178,10 +203,32 @@ function EditorCanvas({ onGraphChange, onGenerateFromScript }: FlowEditorProps) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes, edges])
 
+  const resetFlow = useCallback(() => {
+    setNodes(initialNodes)
+    setEdges([])
+  }, [setNodes, setEdges, initialNodes])
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 12, height: '100%' }}>
       <div style={{ borderRight: '1px solid rgba(255,255,255,.15)', paddingRight: 12 }}>
         <div style={{ fontWeight: 700, marginBottom: 8 }}>Palette</div>
+        <button
+          onClick={resetFlow}
+          style={{ 
+            width: '100%', 
+            marginBottom: 16, 
+            padding: '8px 12px',
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+          title="모든 노드와 엣지를 지우고 초기 상태로 되돌립니다"
+        >
+          🔄 초기화
+        </button>
         {palette.map((p, idx) => (
           <button
             key={idx}
